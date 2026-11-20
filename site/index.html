@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="ko" class="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Anatomy Studio — 개념을 인터랙티브 아이소메트릭 기계 일러스트로 구현하는 웹 도구</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="./style.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              cyan: '#00f0ff',
+              amber: '#ffb800',
+              purple: '#b55fe6',
+              green: '#00e599',
+              rose: '#ff4766'
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-[#070709] text-[#f4f4f7] bg-tech-grid min-h-screen flex flex-col selection:bg-cyan-500/30 selection:text-cyan-200">
+
+  <!-- Top Navigation Header -->
+  <header class="border-b border-[#23232b] bg-[#101014]/90 backdrop-blur-xl sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <!-- Logo & Branding -->
+      <div class="flex items-center space-x-3.5">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-cyan-500/25 ring-1 ring-white/20">
+          <i data-lucide="box" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-white via-neutral-200 to-neutral-400 bg-clip-text text-transparent">Anatomy Studio</span>
+            <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded-md bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+              <span>Standalone</span>
+            </span>
+          </div>
+          <p class="text-xs text-neutral-400 hidden sm:block">Concept-to-Isometric Physical Machine Engine</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex items-center space-x-1 sm:space-x-1.5 bg-neutral-900/95 p-1 rounded-xl border border-neutral-800/80 shadow-inner">
+        <button id="tab-btn-showcase" class="tab-btn active px-3.5 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-all flex items-center space-x-1.5 bg-neutral-800 text-white shadow-sm border border-neutral-700/50">
+          <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
+          <span>쇼케이스</span>
+        </button>
+        <button id="tab-btn-studio" class="tab-btn px-3.5 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-all flex items-center space-x-1.5 text-neutral-400 hover:text-white">
+          <i data-lucide="wand-2" class="w-4 h-4 text-cyan-400"></i>
+          <span>개념 스튜디오</span>
+        </button>
+        <button id="tab-btn-tuner" class="tab-btn px-3.5 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-all flex items-center space-x-1.5 text-neutral-400 hover:text-white">
+          <i data-lucide="sliders" class="w-4 h-4 text-purple-400"></i>
+          <span>파라메트릭 튜너</span>
+        </button>
+        <button id="tab-btn-export" class="tab-btn px-3.5 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-all flex items-center space-x-1.5 text-neutral-400 hover:text-white">
+          <i data-lucide="download" class="w-4 h-4 text-emerald-400"></i>
+          <span>내보내기</span>
+        </button>
+      </nav>
+
+      <!-- Action Utilities & API Key -->
+      <div class="flex items-center space-x-2">
+        <!-- API Key Status Pill -->
+        <button id="api-key-status-badge" class="text-[11px] font-mono px-2.5 py-1 rounded-lg bg-neutral-900 text-neutral-400 border border-neutral-800 flex items-center gap-1.5 hover:text-white transition-colors" title="Google Gemini API 키 설정">
+          <span class="w-2 h-2 rounded-full bg-neutral-500"></span>
+          <span class="hidden sm:inline">API Key 설정 (선택)</span>
+        </button>
+        <button id="btn-open-api-key-modal" class="sm:hidden p-2 rounded-xl bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white" title="API Key">
+          <i data-lucide="key" class="w-4 h-4"></i>
+        </button>
+
+        <button id="btn-theme-toggle" class="p-2 rounded-xl bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-700 transition-colors" title="테마 전환 (다크/라이트)">
+          <i data-lucide="sun" class="w-4 h-4 hidden light-icon"></i>
+          <i data-lucide="moon" class="w-4 h-4 dark-icon"></i>
+        </button>
+        <a href="https://github.com/wheresryan22/anatomy" target="_blank" rel="noopener noreferrer" class="hidden md:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-neutral-900 border border-neutral-800 text-xs font-medium text-neutral-300 hover:text-white hover:border-neutral-700 transition-colors">
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+
+    <!-- 10-Second Understanding Hero Banner -->
+    <section class="glass-panel p-6 sm:p-7 rounded-2xl border-l-4 border-l-cyan-500 relative overflow-hidden">
+      <div class="scanline-bar"></div>
+      <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+        <div class="space-y-2 max-w-3xl">
+          <div class="inline-flex items-center space-x-2 px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-mono">
+            <i data-lucide="cpu" class="w-3.5 h-3.5"></i>
+            <span>The Object is the Explanation · No Server Required</span>
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white leading-tight">
+            개념을 직접 만져보는 <span class="bg-gradient-to-r from-cyan-400 to-indigo-400 bg-clip-text text-transparent">3D 아이소메트릭 기계 일러스트</span>로 구현
+          </h1>
+          <p class="text-sm text-neutral-400 leading-relaxed">
+            추상적인 네모 상자와 화살표 대신, 개념 그 자체를 피스톤·레일·스프링·다이얼로 움직이는 정밀 기계로 시각화합니다. 서버 설치 없이 브라우저에서 바로 조작하고 내보낼 수 있습니다.
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-mono text-cyan-400 bg-cyan-950/60 border border-cyan-800/60 px-3.5 py-2 rounded-xl flex items-center gap-2 shadow-sm">
+            <i data-lucide="shield-check" class="w-4 h-4 text-cyan-400"></i>
+            <span>GitHub Pages 100% 호환</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- 3-Step Quick Guide Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5 mt-6 pt-6 border-t border-neutral-800/80">
+        <!-- Step 1 -->
+        <div class="guide-step-card cursor-pointer step-card-jump" data-tab="studio">
+          <div class="flex items-center space-x-3 mb-1.5">
+            <span class="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-400 text-xs font-mono font-bold flex items-center justify-center border border-cyan-500/40">1</span>
+            <span class="text-sm font-bold text-white">개념 선택 & 입력</span>
+          </div>
+          <p class="text-xs text-neutral-400 leading-relaxed">
+            토큰 버킷·LRU 캐시·WAL 엔진 등 9대 프리셋을 선택하거나, 나만의 아이디어를 입력해 기계로 합성합니다.
+          </p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="guide-step-card cursor-pointer step-card-jump" data-tab="studio">
+          <div class="flex items-center space-x-3 mb-1.5">
+            <span class="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-400 text-xs font-mono font-bold flex items-center justify-center border border-purple-500/40">2</span>
+            <span class="text-sm font-bold text-white">인터랙티브 탐색</span>
+          </div>
+          <p class="text-xs text-neutral-400 leading-relaxed">
+            마우스 드래그로 장치를 구동하고, 4x 정밀 줌과 3단 뷰 모드(Solid, X-Ray 청사진, Exploded 분해)로 검증합니다.
+          </p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="guide-step-card cursor-pointer step-card-jump" data-tab="export">
+          <div class="flex items-center space-x-3 mb-1.5">
+            <span class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 text-xs font-mono font-bold flex items-center justify-center border border-emerald-500/40">3</span>
+            <span class="text-sm font-bold text-white">원클릭 내보내기</span>
+          </div>
+          <p class="text-xs text-neutral-400 leading-relaxed">
+            독립 실행 HTML 파일, 무손실 벡터 SVG, React TSX 컴포넌트, A4 특허 도면으로 0초 만에 추출합니다.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- TAB 1: SHOWCASE GALLERY                                 -->
+    <!-- ======================================================== -->
+    <section id="tab-content-showcase" class="tab-pane space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left: Model Selection Cards -->
+        <div class="lg:col-span-4 space-y-3" id="showcase-list-container">
+          <div class="flex items-center justify-between px-1">
+            <span class="text-xs font-semibold uppercase tracking-wider text-neutral-400">공식 마스터피스 컬렉션</span>
+            <span class="text-[11px] font-mono text-cyan-400">CLICK TO LOAD</span>
+          </div>
+          <div id="showcase-cards" class="space-y-2.5 max-h-[640px] overflow-y-auto pr-1">
+            <!-- Populated via app.js -->
+          </div>
+        </div>
+
+        <!-- Right: Live Interactive Frame Viewer -->
+        <div class="lg:col-span-8 flex flex-col space-y-3">
+          <div class="flex items-center justify-between bg-neutral-900/90 px-4 py-2.5 rounded-xl border border-neutral-800 shadow-sm">
+            <div class="flex items-center space-x-2.5">
+              <span id="active-model-title" class="text-sm font-semibold text-white">SpaceX Raptor 2 Test Stand</span>
+              <span id="active-model-badge" class="text-[11px] px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-mono">Flagship</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button id="btn-toggle-viewer-theme" class="text-xs px-2.5 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition-colors flex items-center space-x-1.5 border border-neutral-700/60">
+                <i data-lucide="palette" class="w-3.5 h-3.5"></i>
+                <span id="viewer-theme-label">Light 버전 보기</span>
+              </button>
+              <button id="btn-fullscreen-viewer" class="text-xs p-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition-colors border border-neutral-700/60" title="전체화면">
+                <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="anatomy-viewport-frame bg-black h-[580px] w-full flex items-center justify-center relative">
+            <iframe id="showcase-iframe" src="./examples/raptor-engine/raptor-engine.html" class="w-full h-full border-none" title="Anatomy Live Interactive Viewer"></iframe>
+          </div>
+
+          <div class="p-3 bg-neutral-900/70 rounded-xl border border-neutral-800 flex items-center justify-between text-xs text-neutral-400">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="info" class="w-4 h-4 text-cyan-400 flex-shrink-0"></i>
+              <span id="showcase-hint">마우스를 프레임 위로 이동하면 11개 엔진 어셈블리로 분해(Explode)됩니다.</span>
+            </div>
+            <div class="font-mono text-[11px] text-emerald-400 flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              <span>60 FPS WebGL Runtime</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- TAB 2: CONCEPT STUDIO (AI GENERATOR)                    -->
+    <!-- ======================================================== -->
+    <section id="tab-content-studio" class="tab-pane hidden space-y-6">
+      <div class="glass-panel p-5 rounded-2xl space-y-4">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold uppercase tracking-wider text-neutral-400">9대 마스터피스 개념 프리셋 (원클릭 로드)</span>
+            <span class="text-[11px] font-mono text-cyan-400">CLICK TO SYNTHESIZE</span>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-9 gap-2" id="preset-buttons-container">
+            <!-- Populated via app.js -->
+          </div>
+        </div>
+
+        <!-- Custom Concept Input -->
+        <div class="pt-3 border-t border-neutral-800 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div class="relative flex-1">
+            <i data-lucide="sparkles" class="w-4 h-4 absolute left-3.5 top-3.5 text-cyan-400"></i>
+            <input type="text" id="custom-concept-input" placeholder="새로운 개념 입력 (예: Raft Consensus, LSM-Tree, Transformer Attention, Redis PubSub...)" class="w-full pl-10 pr-4 py-2.5 bg-neutral-900 border border-neutral-800 rounded-xl text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all">
+          </div>
+          <button id="btn-generate-concept" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 via-indigo-600 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-medium text-sm flex items-center justify-center space-x-2 shadow-lg shadow-cyan-500/25 transition-all">
+            <i data-lucide="cpu" class="w-4 h-4"></i>
+            <span>인터랙티브 일러스트 생성</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Generated Live Canvas Area -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-8 space-y-3">
+          <!-- Viewport Controls & HUD Bar -->
+          <div class="flex flex-wrap items-center justify-between bg-neutral-900/90 px-4 py-2 rounded-xl border border-neutral-800 gap-2">
+            <div class="flex items-center space-x-1 bg-neutral-950 p-1 rounded-lg border border-neutral-800">
+              <button id="btn-mode-solid" class="px-2.5 py-1 text-xs rounded-md bg-neutral-800 text-white font-medium transition-all">Solid</button>
+              <button id="btn-mode-xray" class="px-2.5 py-1 text-xs rounded-md text-neutral-400 hover:text-white font-medium transition-all">Blueprint X-Ray</button>
+              <button id="btn-mode-explode" class="px-2.5 py-1 text-xs rounded-md text-neutral-400 hover:text-white font-medium transition-all">Exploded View</button>
+            </div>
+
+            <div class="flex items-center space-x-1 bg-neutral-950 p-1 rounded-lg border border-neutral-800">
+              <span class="text-[10px] font-mono text-neutral-400 px-1.5">ZOOM:</span>
+              <button id="btn-zoom-1x" class="px-2 py-0.5 text-xs rounded bg-neutral-800 text-white font-mono">1x</button>
+              <button id="btn-zoom-2x" class="px-2 py-0.5 text-xs rounded text-neutral-400 hover:text-white font-mono">2x</button>
+              <button id="btn-zoom-4x" class="px-2 py-0.5 text-xs rounded text-neutral-400 hover:text-white font-mono" title="Anatomy 4x Critical Inspection">4x</button>
+              <button id="btn-zoom-reset" class="p-1 text-xs rounded text-neutral-400 hover:text-white" title="리셋"><i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i></button>
+            </div>
+
+            <div class="flex items-center space-x-2 text-xs">
+              <span id="canvas-parts-count" class="font-mono text-cyan-400 bg-cyan-950/50 px-2 py-0.5 rounded border border-cyan-800/40">21 Solids · 64 Total Parts</span>
+            </div>
+          </div>
+
+          <div id="studio-plate-container" class="anatomy-viewport-frame bg-[#131313] p-4 flex items-center justify-center min-h-[480px] overflow-hidden">
+            <div id="zoom-inner-wrapper" class="zoom-canvas-wrapper w-full flex items-center justify-center">
+              <!-- Dynamic Plate HTML rendered here -->
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-4 space-y-4">
+          <div class="glass-panel p-5 rounded-2xl space-y-4">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <i data-lucide="cog" class="w-4 h-4 text-cyan-400"></i>
+              <span>개념의 물리적 메타포 (Physical Metaphor)</span>
+            </h3>
+            <p id="concept-metaphor-desc" class="text-xs text-neutral-300 leading-relaxed bg-neutral-900/90 p-3.5 rounded-xl border border-neutral-800">
+              선택된 개념의 물리적 기계 치환 설명이 표시됩니다.
+            </p>
+
+            <h4 class="text-xs font-semibold text-neutral-400 uppercase tracking-wider">부품 구성 계층 (Parts Hierarchy)</h4>
+            <div class="space-y-2 text-xs" id="concept-parts-hierarchy">
+              <div class="p-2.5 rounded-lg bg-neutral-900/70 border border-neutral-800/80 flex items-center justify-between">
+                <span class="text-neutral-300">Base & Bedplate</span>
+                <span class="text-neutral-400 font-mono">Heavy Cast Iron (Tone lo)</span>
+              </div>
+              <div class="p-2.5 rounded-lg bg-neutral-900/70 border border-neutral-800/80 flex items-center justify-between">
+                <span class="text-neutral-300">Structure Posts</span>
+                <span class="text-neutral-400 font-mono">Ground Steel Cylinders</span>
+              </div>
+              <div class="p-2.5 rounded-lg bg-neutral-900/70 border border-neutral-800/80 flex items-center justify-between">
+                <span class="text-neutral-300">Mechanism</span>
+                <span class="text-neutral-400 font-mono">Sliding Gate & Springs</span>
+              </div>
+              <div class="p-2.5 rounded-lg bg-neutral-900/70 border border-neutral-800/80 flex items-center justify-between">
+                <span class="text-neutral-300">Subject (Lit Part)</span>
+                <span class="text-cyan-400 font-mono">Active Working Token</span>
+              </div>
+            </div>
+
+            <div class="pt-3 border-t border-neutral-800 space-y-1.5 text-xs">
+              <div class="flex justify-between text-neutral-400">
+                <span>투영 각도 (Camera):</span>
+                <span class="font-mono text-neutral-200">ISO 30° Elevation, 42° Azimuth</span>
+              </div>
+              <div class="flex justify-between text-neutral-400">
+                <span>페인터 정렬 (Depth Settle):</span>
+                <span class="font-mono text-emerald-400">100% Ray-Casted Pass</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- TAB 3: PARAMETRIC TUNER & BLUEPRINT                     -->
+    <!-- ======================================================== -->
+    <section id="tab-content-tuner" class="tab-pane hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-5 space-y-4">
+          <div class="glass-panel p-5 rounded-2xl space-y-5">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <i data-lucide="sliders" class="w-4 h-4 text-cyan-400"></i>
+              <span>카메라 및 기하학 제어</span>
+            </h3>
+
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs">
+                <span class="text-neutral-300">투영 방위각 (Azimuth)</span>
+                <span id="val-azimuth" class="font-mono text-cyan-400">42°</span>
+              </div>
+              <input type="range" id="slider-azimuth" min="30" max="60" value="42" class="w-full accent-cyan-500">
+            </div>
+
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs">
+                <span class="text-neutral-300">투영 앙각 (Elevation)</span>
+                <span id="val-elevation" class="font-mono text-cyan-400">30°</span>
+              </div>
+              <input type="range" id="slider-elevation" min="20" max="45" value="30" class="w-full accent-cyan-500">
+            </div>
+
+            <h3 class="text-sm font-bold text-white flex items-center gap-2 pt-3 border-t border-neutral-800">
+              <i data-lucide="gauge" class="w-4 h-4 text-amber-400"></i>
+              <span>장치 물리 수치 튜닝</span>
+            </h3>
+
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs">
+                <span class="text-neutral-300">토큰/슬롯 용량 파라미터</span>
+                <span id="val-tokens" class="font-mono text-amber-400">6 units</span>
+              </div>
+              <input type="range" id="slider-tokens" min="1" max="10" value="6" class="w-full accent-amber-500">
+            </div>
+
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs">
+                <span class="text-neutral-300">유량 / 압력 계수 (Pressure)</span>
+                <span id="val-pressure" class="font-mono text-amber-400">2.8 bar</span>
+              </div>
+              <input type="range" id="slider-pressure" min="1" max="5" step="0.1" value="2.8" class="w-full accent-amber-500">
+            </div>
+
+            <div class="pt-3 border-t border-neutral-800 flex items-center justify-between">
+              <div>
+                <div class="text-xs font-semibold text-white">A4 특허 청사진 모드</div>
+                <div class="text-[11px] text-neutral-400">엔지니어링 특허 문서 도면 스타일 적용</div>
+              </div>
+              <button id="btn-toggle-blueprint-mode" class="px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-xs text-neutral-300 transition-colors border border-neutral-700">
+                청사진 모드 켜기
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-7">
+          <div class="glass-panel p-4 rounded-2xl flex flex-col items-center justify-center min-h-[500px]" id="tuner-preview-container">
+            <!-- Tuned preview -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- TAB 4: EXPORT & CODE SUITE                              -->
+    <!-- ======================================================== -->
+    <section id="tab-content-export" class="tab-pane hidden space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- 1. Standalone HTML -->
+        <div class="glass-panel p-5 rounded-2xl flex flex-col justify-between space-y-4 hover:border-cyan-500/50 transition-all">
+          <div class="space-y-2">
+            <div class="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center">
+              <i data-lucide="file-code" class="w-5 h-5"></i>
+            </div>
+            <h3 class="text-base font-bold text-white">Standalone HTML</h3>
+            <p class="text-xs text-neutral-400">
+              외부 라이브러리 없이 더블클릭만으로 브라우저에서 바로 동작하는 인터랙티브 독립 실행 HTML 파일
+            </p>
+          </div>
+          <button id="btn-export-html" class="w-full py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs font-semibold text-cyan-400 transition-colors flex items-center justify-center space-x-1.5 border border-neutral-700/60">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>HTML 다운로드 (.html)</span>
+          </button>
+        </div>
+
+        <!-- 2. Pure Vector SVG -->
+        <div class="glass-panel p-5 rounded-2xl flex flex-col justify-between space-y-4 hover:border-amber-500/50 transition-all">
+          <div class="space-y-2">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
+              <i data-lucide="image" class="w-5 h-5"></i>
+            </div>
+            <h3 class="text-base font-bold text-white">Pure Vector SVG</h3>
+            <p class="text-xs text-neutral-400">
+              Figma, Illustrator, 슬라이드 발표 자료에 바로 붙여넣어 편집 가능한 무손실 인라인 벡터 그래픽
+            </p>
+          </div>
+          <button id="btn-export-svg" class="w-full py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs font-semibold text-amber-400 transition-colors flex items-center justify-center space-x-1.5 border border-neutral-700/60">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>SVG 다운로드 (.svg)</span>
+          </button>
+        </div>
+
+        <!-- 3. React / TSX Component -->
+        <div class="glass-panel p-5 rounded-2xl flex flex-col justify-between space-y-4 hover:border-purple-500/50 transition-all">
+          <div class="space-y-2">
+            <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center">
+              <i data-lucide="code-2" class="w-5 h-5"></i>
+            </div>
+            <h3 class="text-base font-bold text-white">React / Next.js TSX</h3>
+            <p class="text-xs text-neutral-400">
+              Next.js, Vite, React 프로젝트에 바로 import하여 사용할 수 있는 타입스크립트 컴포넌트 코드
+            </p>
+          </div>
+          <button id="btn-export-react" class="w-full py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs font-semibold text-purple-400 transition-colors flex items-center justify-center space-x-1.5 border border-neutral-700/60">
+            <i data-lucide="copy" class="w-4 h-4"></i>
+            <span>TSX 코드 복사</span>
+          </button>
+        </div>
+
+        <!-- 4. A4 Blueprint Poster -->
+        <div class="glass-panel p-5 rounded-2xl flex flex-col justify-between space-y-4 hover:border-emerald-500/50 transition-all">
+          <div class="space-y-2">
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+              <i data-lucide="printer" class="w-5 h-5"></i>
+            </div>
+            <h3 class="text-base font-bold text-white">A4 특허 청사진 문서</h3>
+            <p class="text-xs text-neutral-400">
+              클래식 블루프린트 그리드와 엔지니어링 명세가 각인된 A4 가로 인쇄/PDF용 포스터 양식
+            </p>
+          </div>
+          <button id="btn-export-blueprint" class="w-full py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs font-semibold text-emerald-400 transition-colors flex items-center justify-center space-x-1.5 border border-neutral-700/60">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>청사진 다운로드 (.html)</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="glass-panel p-5 rounded-2xl space-y-3">
+        <div class="flex items-center justify-between text-xs text-neutral-400">
+          <span class="font-mono text-neutral-300">React Component Code Preview</span>
+          <button id="btn-copy-code-block" class="px-2.5 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-xs text-neutral-300 transition-colors flex items-center gap-1 border border-neutral-700">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+            <span>전체 복사</span>
+          </button>
+        </div>
+        <pre class="bg-neutral-950 p-4 rounded-xl border border-neutral-800 text-xs font-mono text-neutral-300 overflow-x-auto max-h-[340px]"><code id="code-preview-area">// React 코드 준비 중...</code></pre>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Global Footer -->
+  <footer class="border-t border-[#23232b] bg-[#101014]/70 py-6 text-center text-xs text-neutral-400">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center space-x-2">
+        <span class="font-semibold text-neutral-300">Anatomy Studio Standalone</span>
+        <span>— Based on <a href="https://github.com/wheresryan22/anatomy" target="_blank" class="text-cyan-400 hover:underline">wheresryan22/anatomy</a></span>
+      </div>
+      <div class="font-mono text-[11px] text-neutral-400">
+        100% Client-Side Engine · Zero-Server · GitHub Pages Ready
+      </div>
+    </div>
+  </footer>
+
+  <!-- Gemini API Key Settings Modal -->
+  <div id="api-key-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
+    <div class="glass-panel p-6 rounded-2xl max-w-lg w-full border border-neutral-700 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-neutral-800 pb-3">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
+            <i data-lucide="key" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white">Google Gemini API Key 설정</h3>
+            <p class="text-[11px] text-neutral-400">Bring Your Own Key (선택 사항)</p>
+          </div>
+        </div>
+        <button id="btn-close-api-key-modal" class="text-neutral-400 hover:text-white p-1">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs text-neutral-300 leading-relaxed">
+        <div class="p-3 rounded-xl bg-cyan-950/40 border border-cyan-800/40 text-cyan-300 flex items-start space-x-2">
+          <i data-lucide="shield-check" class="w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5"></i>
+          <span>
+            <strong>완전한 프라이버시 보장</strong>: 입력하신 API 키는 오직 브라우저의 <code>localStorage</code>에만 보관되며, 어떠한 외부 서버로도 전송되지 않고 Google Gemini API 엔드포인트와 직접 통신합니다.
+          </span>
+        </div>
+
+        <p class="text-neutral-400 text-[11px]">
+          * API 키가 없어도 <strong>9종의 핵심 마스터피스 프리셋과 내장 룰베이스 합성 엔진은 100% 무료로 무제한 사용</strong>할 수 있습니다. 키를 등록하시면 임의의 자연어 프롬프트를 Gemini 2.0 Flash가 더욱 심도 있는 기계 메타포로 분석하여 생성합니다.
+        </p>
+
+        <div>
+          <label class="block text-xs font-semibold text-neutral-300 mb-1">Gemini API Key</label>
+          <input type="password" id="gemini-api-key-input" placeholder="AIzaSy..." class="w-full px-3 py-2 bg-neutral-900 border border-neutral-800 rounded-xl text-sm font-mono text-white placeholder-neutral-600 focus:outline-none focus:border-cyan-500">
+          <p class="text-[10px] text-neutral-500 mt-1">Google AI Studio (aistudio.google.com)에서 무료 발급받을 수 있습니다.</p>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-2 border-t border-neutral-800">
+        <button id="btn-clear-api-key" class="text-xs text-rose-400 hover:text-rose-300 px-3 py-1.5 rounded-lg transition-colors">
+          키 삭제
+        </button>
+        <div class="flex items-center space-x-2">
+          <button id="btn-save-api-key" class="px-4 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-bold transition-all shadow-md shadow-cyan-500/20">
+            저장
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-12 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="px-4 py-3 rounded-xl bg-neutral-900 border border-cyan-500/50 shadow-2xl shadow-cyan-500/20 text-xs text-white flex items-center space-x-2">
+      <i data-lucide="check-circle-2" class="w-4 h-4 text-cyan-400"></i>
+      <span id="toast-message">알림</span>
+    </div>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>

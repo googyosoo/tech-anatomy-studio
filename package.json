@@ -1,0 +1,22 @@
+{
+  "name": "anatomy-studio",
+  "version": "1.0.0",
+  "description": "Interactive Isometric Concept Visualizer Web Application based on Anatomy",
+  "type": "module",
+  "main": "webapp/server.mjs",
+  "scripts": {
+    "start": "node webapp/server.mjs",
+    "dev": "node webapp/server.mjs",
+    "test": "node tests/audit.test.mjs"
+  },
+  "keywords": [
+    "anatomy",
+    "isometric",
+    "svg",
+    "interactive",
+    "explainer",
+    "ai-diagrams"
+  ],
+  "author": "Anatomy WebApp Team",
+  "license": "MIT"
+}
